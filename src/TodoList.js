@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import TodoListContract from '../build/contracts/TodoList.json';
 import web3, {
-  selectContractInstance, mapReponseToJSON
+  selectContractInstance, setDefaultAccount, mapReponseToJSON
 } from './web3';
 import styled, { injectGlobal } from 'styled-components';
 
@@ -38,8 +38,7 @@ class TodoList extends Component {
 
     this.state = {
       todoItems: [],
-      newItem: '',
-      account: web3.eth.accounts[0]
+      newItem: ''
     };
 
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -47,6 +46,10 @@ class TodoList extends Component {
   }
 
   async componentWillMount() {
+    // The default account is the one the transactions & call are made from.
+    // It can be overwritten with the "from" option.
+    await setDefaultAccount(web3.eth.accounts[0]);
+
     this.todoList = await selectContractInstance(TodoListContract);
 
     const todoItems = await this.getTodoItems();
@@ -56,7 +59,7 @@ class TodoList extends Component {
   async handleSubmit({ key }) {
     if (key !== 'Enter') return;
     const todoList = await selectContractInstance(TodoListContract);
-    await todoList.addTodoItem(this.state.newItem, { from: this.state.account});
+    await todoList.addTodoItem(this.state.newItem);
     const todoItems = await this.getTodoItems();
 
     this.setState({ todoItems, newItem: '' });
@@ -72,7 +75,7 @@ class TodoList extends Component {
   }
 
   async deleteTodoItem(position) {
-    await this.todoList.deleteTodoItem(position, { from: this.state.account });
+    await this.todoList.deleteTodoItem(position);
     const todoItems = await this.getTodoItems();
 
     this.setState({ todoItems });
